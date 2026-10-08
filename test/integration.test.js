@@ -432,5 +432,32 @@ test('real API today evidence resolves previous-day gaps, retains zero-inference
  Object.entries(bounds).forEach(([key,bound])=>{assert(p[key].length<=bound);assert(/^[\x00-\x7f]*$/.test(p[key]));});
  assert(1+Object.values(p).reduce((sum,v)=>sum+8+v.length,0)<=1024);
  assert(!JSON.stringify(p).includes('not-for-watch'));assert.equal(a.store.read('cache').schema,2);
- a.events.appmessage({payload:{REFRESH:1}});assert.equal(a.requests.length,3);assert.equal(a.sent.at(-1)[0],'Complete cache');
+ a.events.appmessage({payload:{REFRESH:1}});assert.equal(a.requests.length,4);
+ a.requests[3].reply({data:{obtainKrakenToken:{token:'fake'}}});
+ a.requests[4].reply({data:{viewer:{accounts:[{number:'fake'}]}}});
+ a.requests[5].reply({data:{account:{properties:[{electricitySupplyPoints:[{halfHourlyReadings:[...day('2026-10-03'),...day('2026-10-04')]}]}]}}});
+ assert.equal(a.sent.at(-1)[3],'96.00 kWh');assert.match(a.sent.at(-1)[8],/Zero inferred 0/);
+});
+
+test('startup and watch refresh correct missing slots without a settings save',()=>{
+ const at=Date.parse('2026-10-05T13:00:00+09:00'),local=memory();
+ const store=new storage.Store(local);
+ store.write('settings',{...rates,contractStartDate:'2026-10-03'});
+ store.write('credentials',{email:'qa@example.invalid',password:'test-secret'});
+ const a=app(true,at,local);
+ const start=Date.parse('2026-10-03T00:00:00+09:00');
+ const rows=Array.from({length:96},(_,i)=>({startAt:new Date(start+i*core.HALF_HOUR).toISOString(),endAt:new Date(start+(i+1)*core.HALF_HOUR).toISOString(),value:1}));
+ function reply(offset,readings){
+  a.requests[offset].reply({data:{obtainKrakenToken:{token:'fake'}}});
+  a.requests[offset+1].reply({data:{viewer:{accounts:[{number:'fake'}]}}});
+  a.requests[offset+2].reply({data:{account:{properties:[{electricitySupplyPoints:[{halfHourlyReadings:readings}]}]}}});
+ }
+ a.events.ready();
+ reply(0,rows.filter((r,i)=>i!==60&&i!==95));
+ assert.equal(a.sent.at(-1)[3],'48.00 kWh');assert.match(a.sent.at(-1)[0],/missing/);
+ a.events.appmessage({payload:{REFRESH:1}});
+ const evidence={startAt:new Date(start+96*core.HALF_HOUR).toISOString(),endAt:new Date(start+97*core.HALF_HOUR).toISOString(),value:1000};
+ reply(3,[...rows.filter((r,i)=>i!==60&&i!==95),evidence]);
+ assert.equal(a.sent.at(-1)[3],'94.00 kWh');assert.match(a.sent.at(-1)[8],/Zero inferred 2/);
+ assert.equal(a.sent.at(-1)[0],'Estimate');assert.equal(a.urls.length,0);
 });
