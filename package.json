@@ -1,0 +1,49 @@
+{
+  "name": "electricitymeter",
+  "version": "1.0.8",
+  "private": true,
+  "author": "Electricity Meter Team",
+  "dependencies": {
+    "@rebble/clay": "^1.0.4"
+  },
+  "pebble": {
+    "displayName": "Electricity Meter",
+    "uuid": "ec469ea7-2e96-44c7-9fd2-5d81c33c81a4",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite",
+      "emery",
+      "flint"
+    ],
+    "watchapp": {
+      "watchface": false
+    },
+    "capabilities": [
+      "configurable"
+    ],
+    "messageKeys": {
+      "STATUS": 0,
+      "CURRENT": 1,
+      "FORECAST": 2,
+      "USAGE": 3,
+      "PERIOD": 4,
+      "UPDATED": 5,
+      "DETAIL": 6,
+      "REFRESH": 7,
+      "BREAKDOWN": 8,
+      "BAND1": 9,
+      "BAND2": 10
+    },
+    "resources": {
+      "media": []
+    }
+  },
+  "scripts": {
+    "build": "pebble build && python3 tools/package.py",
+    "test": "node --test test/*.test.js"
+  }
+}
