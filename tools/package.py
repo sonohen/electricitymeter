@@ -5,7 +5,10 @@ import json
 import shutil
 
 root = Path(__file__).resolve().parents[1]
-source = root / "build" / "src.pbw"
+package = json.loads((root / 'package.json').read_text())
+source = root / "build" / (package['name'] + ".pbw")
+if not source.exists():
+    source = root / "build" / "src.pbw"
 destination = root / "dist" / "electricitymeter.pbw"
 destination.parent.mkdir(exist_ok=True)
 private_prefix = str(Path.home()).encode()
@@ -19,7 +22,7 @@ with zipfile.ZipFile(source) as original, zipfile.ZipFile(destination, "w", zipf
         output.writestr(info, content)
 print("Created dist/electricitymeter.pbw (local paths removed)")
 
-version = json.loads((root / 'package.json').read_text())['version']
+version = package['version']
 versioned = destination.with_name('electricitymeter-' + version + '.pbw')
 shutil.copyfile(destination, versioned)
 print('Created versioned distribution:', versioned.name)
