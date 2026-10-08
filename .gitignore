@@ -4,3 +4,5 @@ build/
 .waf*
 dist/
 __pycache__/
+SPEC.org
+intermediate/

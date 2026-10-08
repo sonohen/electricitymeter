@@ -40,6 +40,8 @@ function complete(cache, settings, info, from, now) {
   if (p[4] !== period || p[5] !== updated || p[6] !== detail ||
       p[0] !== (cache.demo ? 'DEMO - sample usage' : 'Estimate') ||
       p[8].indexOf('DATA COVERAGE\nFrom ' + first) !== 0 ||
+      // Inferred zeros need fresh readings: later measurements may replace them.
+      p[8].indexOf('\nZero inferred 0\n') < 0 ||
       p[8].indexOf('CURRENT BREAKDOWN\nBase ') < 0 ||
       p[8].indexOf('FORECAST BREAKDOWN\nBase ') < 0 ||
       p[8].indexOf('Total JPY ' + p[1].slice(4) + '\n') < 0 ||
